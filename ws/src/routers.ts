@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import { handleNewGame, handleJoinGame } from "./handlers";
 
+// idée de GPT pour retirer le switch
 const handlers: Record<ClientEvent, Function> = {
   NEW_GAME: handleNewGame,
   JOIN_GAME: handleJoinGame,
