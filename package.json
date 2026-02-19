@@ -1,0 +1,9 @@
+{
+  "name": "ws-poc",
+  "private": true,
+  "workspaces": [
+    "app",
+    "ws",
+    "shared"
+  ]
+}

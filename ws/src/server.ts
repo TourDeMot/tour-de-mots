@@ -1,4 +1,4 @@
-import type { Player, SocketData } from "./types";
+import type { Player, SocketData } from "@ws-poc/shared";
 import { messageGateway } from "./gateways";
 import { handleClose } from "./handlers";
 
@@ -20,6 +20,9 @@ const server = Bun.serve({
   },
   websocket: {
     data: {} as SocketData,
+    open(ws) {
+      console.log("client connected");
+    },
     message(ws, message) {
       messageGateway(ws, message, games);
     },
@@ -30,4 +33,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`WebSocket server running at http://localhost:${server.port}`);
+console.log(`WebSocket server running a http://localhost:${server.port}`);

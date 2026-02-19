@@ -17,7 +17,8 @@ export type ErrorCode =
   | "BAD_JSON"
   | "MISSING_UUID"
   | "MISSING_GAME_ID"
-  | "GAME_NOT_FOUND";
+  | "GAME_NOT_FOUND"
+  | "ALREADY_IN_A_GAME";
 
 export type NewGameMessage = { event: "NEW_GAME"; pseudo: string };
 export type JoinGameMessage = {

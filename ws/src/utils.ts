@@ -1,4 +1,4 @@
-import type { ErrorCode, Player, ServerMessage } from "./types";
+import type { ErrorCode, Player, ServerMessage } from "@ws-poc/shared";
 
 export const newErrorMessage = (code: ErrorCode) =>
   ({ event: "ERROR", code }) as ServerMessage;

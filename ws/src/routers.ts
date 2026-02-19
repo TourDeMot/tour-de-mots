@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from "bun";
-import type { Games, SocketData, ClientMessage, ServerMessage } from "./types";
+import type { Games, SocketData, ClientMessage, ServerMessage } from "@ws-poc/shared";
 import { handleNewGame, handleJoinGame } from "./handlers";
 
 export const messageRouter = (

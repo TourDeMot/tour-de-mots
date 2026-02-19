@@ -1,5 +1,5 @@
 import { messageRouter } from "./routers";
-import type { ClientMessage, Games, SocketData } from "./types";
+import type { ClientMessage, Games, SocketData } from "@ws-poc/shared";
 import { newErrorMessage } from "./utils";
 import type { ServerWebSocket } from "bun";
 
