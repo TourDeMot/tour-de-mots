@@ -1,6 +1,7 @@
 import type { ServerWebSocket } from "bun";
 import type { Games, SocketData, ClientMessage, ServerMessage } from "@ws-poc/shared";
 import { handleNewGame, handleJoinGame } from "./handlers";
+import { newErrorMessage } from "./utils";
 
 export const messageRouter = (
   ws: ServerWebSocket<SocketData>,
@@ -14,10 +15,7 @@ export const messageRouter = (
       return handleJoinGame(ws, message, games);
     default:
       return ws.send(
-        JSON.stringify({
-          event: "ERROR",
-          code: "UNKNOWN_EVENT",
-        } as ServerMessage),
+        JSON.stringify(newErrorMessage("UNKNOWN_EVENT")),
       );
   }
 };
