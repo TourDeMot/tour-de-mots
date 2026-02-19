@@ -1,8 +1,9 @@
-import { messageHandler, closeHandler } from "@/handlers";
-import type { SocketData } from "@/types";
+import type { Player, SocketData } from "./types";
+import { messageGateway } from "./gateways";
+import { handleClose } from "./handlers";
 
 // games are players id by game id
-const games = new Map<string, Set<string>>();
+const games = new Map<string, Set<Player>>();
 
 const server = Bun.serve({
   port: 8080,
@@ -10,8 +11,7 @@ const server = Bun.serve({
     const url = new URL(req.url);
     if (url.pathname === "/ws") {
       const uuid = crypto.randomUUID();
-
-      if (server.upgrade(req, { data: { uuid, gameId: undefined } })) {
+      if (server.upgrade(req, { data: { uuid: uuid, gameId: undefined } })) {
         return;
       }
       return new Response("WebSocket upgrade failed", { status: 400 });
@@ -21,10 +21,10 @@ const server = Bun.serve({
   websocket: {
     data: {} as SocketData,
     message(ws, message) {
-      messageHandler(ws, String(message), games);
+      messageGateway(ws, message, games);
     },
-    close(ws, code, message) {
-      closeHandler(ws, games);
+    close(ws) {
+      handleClose(ws, games);
     },
     drain(ws) {},
   },
