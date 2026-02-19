@@ -3,19 +3,12 @@ import type { ErrorCode, Player, ServerMessage } from "@ws-poc/shared";
 export const newErrorMessage = (code: ErrorCode) =>
   ({ event: "ERROR", code }) as ServerMessage;
 
-// toolkit pour une game (Player[]) en pure fonctionnelle
+// toolkit pour Player[] en pure fonctionnelle
 
-export const findPlayer = (game: Player[], uuid: string) =>
-  game.find((player) => player.uuid === uuid);
+export const addPlayer = (players: Player[], player: Player) =>
+  players.some((p) => p.uuid === player.uuid)
+    ? players
+    : [...players, player];
 
-/**
- * Add a new player to the game, if the player is already in the game this function does nothing
- * @param game players of the game
- * @param plyaer player to add
- * @returns
- */
-export const addPlayer = (game: Player[], player: Player) =>
-  findPlayer(game, player.uuid) ? game : [...game, player];
-
-export const removePlayer = (game: Player[], uuid: string) =>
-  game.filter((player) => player.uuid !== uuid);
+export const removePlayer = (players: Player[], uuid: string) =>
+  players.filter((player) => player.uuid !== uuid);

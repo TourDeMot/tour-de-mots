@@ -6,7 +6,7 @@ import type {
   ServerMessage,
   SocketData,
 } from "@ws-poc/shared";
-import { removePlayer, newErrorMessage, addPlayer, findPlayer } from "./utils";
+import { newErrorMessage, addPlayer, removePlayer } from "./utils";
 import type { ServerWebSocket } from "bun";
 
 // source: Gemini 3 fast + Claude Sonnet 4.5
@@ -28,10 +28,11 @@ export const handleNewGame = (
   message: NewGameMessage,
   games: Games,
 ) => {
-  let alreadyInAGame = false;
-  games.forEach((game) => {
-    alreadyInAGame = Boolean(findPlayer(game, ws.data.uuid));
-  })
+  const alreadyInAGame =
+    Array.from(games.values())
+      .flatMap(players => players)
+      .some(({ uuid }) => uuid === ws.data.uuid)
+
   if (alreadyInAGame) {
     return ws.send(JSON.stringify(newErrorMessage("ALREADY_IN_A_GAME")))
   }
