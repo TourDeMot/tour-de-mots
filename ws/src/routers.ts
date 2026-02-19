@@ -1,33 +1,23 @@
 import type { ServerWebSocket } from "bun";
-import type {
-  Games,
-  SocketData,
-  ClientEvent,
-  ClientMessage,
-  ServerMessage,
-} from "./types";
+import type { Games, SocketData, ClientMessage, ServerMessage } from "./types";
 import { handleNewGame, handleJoinGame } from "./handlers";
-
-// idée de GPT pour retirer le switch
-const handlers: Record<ClientEvent, Function> = {
-  NEW_GAME: handleNewGame,
-  JOIN_GAME: handleJoinGame,
-};
 
 export const messageRouter = (
   ws: ServerWebSocket<SocketData>,
   message: ClientMessage,
   games: Games,
 ) => {
-  const handler = handlers[message.event];
-  if (!handler) {
-    return ws.send(
-      JSON.stringify({
-        event: "ERROR",
-        code: "UNKNOWN_EVENT",
-      } as ServerMessage),
-    );
+  switch (message.event) {
+    case "NEW_GAME":
+      return handleNewGame(ws, message, games);
+    case "JOIN_GAME":
+      return handleJoinGame(ws, message, games);
+    default:
+      return ws.send(
+        JSON.stringify({
+          event: "ERROR",
+          code: "UNKNOWN_EVENT",
+        } as ServerMessage),
+      );
   }
-
-  handler(ws, message, games);
 };

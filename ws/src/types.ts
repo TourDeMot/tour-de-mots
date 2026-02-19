@@ -1,4 +1,4 @@
-export type Games = Map<string, Set<Player>>;
+export type Games = Map<string, Player[]>;
 
 export type Player = {
   uuid: string;

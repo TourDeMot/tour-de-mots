@@ -6,18 +6,21 @@ import type {
   ServerMessage,
   SocketData,
 } from "./types";
-import { leaveGame, newErrorMessage } from "./utils";
+import { removePlayer, newErrorMessage, addPlayer } from "./utils";
 import type { ServerWebSocket } from "bun";
 
-// source: Gemini 3 fast
-const generateGameId = (length: number = 6) => {
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-  return Array.from(bytes)
-    .map((b) => chars[b % chars.length])
-    .join("");
+// source: Gemini 3 fast + Claude Sonnet 4.5
+const generateGameId = (games: Games, length: number = 6): string => {
+  let gameId: string;
+  do {
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    gameId = Array.from(bytes)
+      .map((b) => chars[b % chars.length])
+      .join("");
+  } while (games.has(gameId));
+  return gameId;
 };
 
 export const handleNewGame = (
@@ -25,10 +28,13 @@ export const handleNewGame = (
   message: NewGameMessage,
   games: Games,
 ) => {
-  const gameId = generateGameId();
+  const gameId = generateGameId(games);
   ws.data.gameId = gameId;
 
-  games.set(gameId, new Set([{ uuid: ws.data.uuid, pseudo: message.pseudo }]));
+  games.set(
+    gameId,
+    addPlayer([], { uuid: ws.data.uuid, pseudo: message.pseudo }),
+  );
   ws.subscribe(gameId);
 
   ws.send(
@@ -54,12 +60,20 @@ export const handleJoinGame = (
     ws.send(JSON.stringify(newErrorMessage("GAME_NOT_FOUND")));
     return;
   }
-  game.add({ uuid: ws.data.uuid, pseudo: message.pseudo });
+
+  games.set(
+    message.gameId,
+    addPlayer(game, {
+      uuid: ws.data.uuid,
+      pseudo: message.pseudo,
+    }),
+  );
+
   ws.subscribe(message.gameId);
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
-    data: { players: Array.from(game) },
+    data: { players: game },
   } as ServerMessage);
   ws.publish(message.gameId, responsePayload);
   // publish does not send to the current client so we need to send the message to it too
@@ -70,19 +84,18 @@ export const handleClose = (ws: ServerWebSocket<SocketData>, games: Games) => {
   const { uuid, gameId } = ws.data;
   if (!gameId) return;
 
-  const game = games.get(gameId);
+  let game = games.get(gameId);
   if (!game) return;
 
-  leaveGame(game, uuid);
-
-  if (game.size === 0) {
+  if (game.length === 0) {
     games.delete(gameId);
   } else {
+    games.set(gameId, removePlayer(game, uuid));
     ws.publish(
       gameId,
       JSON.stringify({
         event: "PLAYER_LEAVED",
-        data: { players: Array.from(game) },
+        data: { players: game },
       } as ServerMessage),
     );
   }

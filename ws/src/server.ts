@@ -3,7 +3,7 @@ import { messageGateway } from "./gateways";
 import { handleClose } from "./handlers";
 
 // games are players id by game id
-const games = new Map<string, Set<Player>>();
+const games = new Map<string, Player[]>();
 
 const server = Bun.serve({
   port: 8080,
