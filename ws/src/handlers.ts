@@ -30,7 +30,7 @@ export const handleNewGame = (
 ) => {
   const alreadyInAGame =
     Array.from(games.values())
-      .flatMap(players => players)
+      .flat()
       .some(({ uuid }) => uuid === ws.data.uuid)
 
   if (alreadyInAGame) {
