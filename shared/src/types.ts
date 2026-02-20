@@ -1,13 +1,11 @@
-export type Games = Map<string, Player[]>;
+export type SocketData = {
+  uuid: string;
+  gameId: string | undefined;
+};
 
 export type Player = {
   uuid: string;
   pseudo: string;
-};
-
-export type SocketData = {
-  uuid: string;
-  gameId: string | undefined;
 };
 
 export type ClientEvent = "NEW_GAME" | "JOIN_GAME";
@@ -18,7 +16,8 @@ export type ErrorCode =
   | "MISSING_UUID"
   | "MISSING_GAME_ID"
   | "GAME_NOT_FOUND"
-  | "ALREADY_IN_A_GAME";
+  | "ALREADY_IN_A_GAME"
+  | "GAME_EMPTY";
 
 export type NewGameMessage = { event: "NEW_GAME"; pseudo: string };
 export type JoinGameMessage = {
@@ -29,8 +28,9 @@ export type JoinGameMessage = {
 
 export type ClientMessage = NewGameMessage | JoinGameMessage;
 
+export type ServerError = { event: "ERROR"; code: ErrorCode };
 export type ServerMessage =
-  | { event: "ERROR"; code: ErrorCode }
+  | ServerError
   | { event: "NEW_GAME_OK"; data: { gameId: string } }
   | { event: "JOIN_GAME_OK"; data: { players: Player[] } }
   | { event: "PLAYER_LEAVED"; data: { players: Player[] } };

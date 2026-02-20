@@ -1,4 +1,4 @@
-import type { Player, SocketData } from "@ws-poc/shared";
+import type { Player, SocketData } from "@ws-poc/shared/types";
 import { messageGateway } from "./gateways";
 import { handleClose } from "./handlers";
 

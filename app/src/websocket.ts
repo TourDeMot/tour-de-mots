@@ -1,14 +1,18 @@
-import type { ServerMessage } from "@ws-poc/shared";
+import type { ServerMessage, Player } from "@ws-poc/shared/types";
+import type { Dispatch } from "react";
 
-class ClientWebSocket {
+export class ClientWebSocket {
   private ws: WebSocket;
+  setPlayers: Dispatch<Player[]>;
 
-  constructor(url: string) {
+  constructor(url: string, setPlayers: Dispatch<Player[]>) {
     this.ws = new WebSocket(url);
     this.ws.onopen = this.onOpen;
     this.ws.onmessage = this.onMessage;
     this.ws.onerror = this.onError;
     this.ws.onclose = this.onClose;
+
+    this.setPlayers = setPlayers;
   }
 
   private onOpen = () => {
@@ -25,6 +29,7 @@ class ClientWebSocket {
           console.log(message.data.gameId);
           break;
         case "JOIN_GAME_OK":
+          this.setPlayers(message.data.players);
           break;
         case "PLAYER_LEAVED":
           break;
@@ -51,5 +56,3 @@ class ClientWebSocket {
     this.ws.send(data);
   };
 }
-
-export const clientWS = new ClientWebSocket("http://localhost:8080/ws");

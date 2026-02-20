@@ -1,51 +1,36 @@
 import type {
-  Games,
   JoinGameMessage,
   NewGameMessage,
   Player,
   ServerMessage,
   SocketData,
-} from "@ws-poc/shared";
-import { newErrorMessage, addPlayer, removePlayer } from "./utils";
+} from "@ws-poc/shared/types";
+import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@ws-poc/shared/error";
 import type { ServerWebSocket } from "bun";
-
-// source: Gemini 3 fast + Claude Sonnet 4.5
-const generateGameId = (games: Games, length: number = 6): string => {
-  let gameId: string;
-  do {
-    const bytes = new Uint8Array(length);
-    crypto.getRandomValues(bytes);
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    gameId = Array.from(bytes)
-      .map((b) => chars[b % chars.length])
-      .join("");
-  } while (games.has(gameId));
-  return gameId;
-};
+import { createGame, joinGame, leaveGame } from "./games";
 
 export const handleNewGame = (
   ws: ServerWebSocket<SocketData>,
   message: NewGameMessage,
-  games: Games,
+  games: Map<string, Player[]>,
 ) => {
-  const alreadyInAGame =
-    Array.from(games.values())
-      .flat()
-      .some(({ uuid }) => uuid === ws.data.uuid)
-
-  if (alreadyInAGame) {
-    return ws.send(JSON.stringify(newErrorMessage("ALREADY_IN_A_GAME")))
+  if (ws.data.gameId) {
+    return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
   }
 
-  const gameId = generateGameId(games);
+  const result = createGame(games, {
+    uuid: ws.data.uuid,
+    pseudo: message.pseudo,
+  });
+
+  if (!result.ok) {
+    return ws.send(JSON.stringify(result.error));
+  }
+
+  const gameId = result.value;
+
   ws.data.gameId = gameId;
-
-  games.set(
-    gameId,
-    addPlayer([], { uuid: ws.data.uuid, pseudo: message.pseudo }),
-  );
   ws.subscribe(gameId);
-
   ws.send(
     JSON.stringify({
       event: "NEW_GAME_OK",
@@ -57,54 +42,57 @@ export const handleNewGame = (
 export const handleJoinGame = (
   ws: ServerWebSocket<SocketData>,
   message: JoinGameMessage,
-  games: Games,
+  games: Map<string, Player[]>,
 ) => {
   if (!message.gameId) {
-    return ws.send(JSON.stringify(newErrorMessage("MISSING_GAME_ID")));
+    return ws.send(JSON.stringify(MISSING_GAME_ID));
   }
-  ws.data.gameId = message.gameId;
 
-  const game = games.get(message.gameId);
-  if (!game) {
-    ws.send(JSON.stringify(newErrorMessage("GAME_NOT_FOUND")));
+  if (ws.data.gameId) {
+    return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
+  }
+
+  const result = joinGame(games, message.gameId, {
+    uuid: ws.data.uuid,
+    pseudo: message.pseudo,
+  });
+  if (!result.ok) {
+    ws.send(JSON.stringify(result.error));
     return;
   }
 
-  games.set(
-    message.gameId,
-    addPlayer(game, {
-      uuid: ws.data.uuid,
-      pseudo: message.pseudo,
-    }),
-  );
-
+  ws.data.gameId = message.gameId;
   ws.subscribe(message.gameId);
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
-    data: { players: game },
+    data: { players: result.value },
   } as ServerMessage);
+
   ws.publish(message.gameId, responsePayload);
+
   // publish does not send to the current client so we need to send the message to it too
   ws.send(responsePayload);
 };
 
-export const handleClose = (ws: ServerWebSocket<SocketData>, games: Games) => {
+export const handleClose = (
+  ws: ServerWebSocket<SocketData>,
+  games: Map<string, Player[]>,
+) => {
   const { uuid, gameId } = ws.data;
   if (!gameId) return;
 
-  let game = games.get(gameId);
-  if (!game) return;
+  const result = leaveGame(games, gameId, uuid);
+  if (!result.ok) return;
 
-  if (game.length === 0) {
-    games.delete(gameId);
-  } else {
-    games.set(gameId, removePlayer(game, uuid));
+  ws.unsubscribe(gameId);
+
+  if (result.value.length !== 0) {
     ws.publish(
       gameId,
       JSON.stringify({
         event: "PLAYER_LEAVED",
-        data: { players: game },
+        data: { players: result.value },
       } as ServerMessage),
     );
   }
