@@ -31,6 +31,6 @@ export type ClientMessage = NewGameMessage | JoinGameMessage;
 export type ServerError = { event: "ERROR"; code: ErrorCode };
 export type ServerMessage =
   | ServerError
-  | { event: "NEW_GAME_OK"; data: { gameId: string } }
+  | { event: "NEW_GAME_OK"; data: { gameId: string, players: Player[] } }
   | { event: "JOIN_GAME_OK"; data: { players: Player[] } }
   | { event: "PLAYER_LEAVED"; data: { players: Player[] } };

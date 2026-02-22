@@ -1,58 +1,42 @@
-import type { ServerMessage, Player } from "@ws-poc/shared/types";
-import type { Dispatch } from "react";
+import type { ServerMessage } from "@ws-poc/shared/types"
+import { useEffect, useRef, useState } from "react"
 
-export class ClientWebSocket {
-  private ws: WebSocket;
-  setPlayers: Dispatch<Player[]>;
+export const useWs = (url: string, handler: (s: ServerMessage) => void) => {
+  const [isReady, setIsReady] = useState(false);
+  const ws = useRef<WebSocket | null>(null);
 
-  constructor(url: string, setPlayers: Dispatch<Player[]>) {
-    this.ws = new WebSocket(url);
-    this.ws.onopen = this.onOpen;
-    this.ws.onmessage = this.onMessage;
-    this.ws.onerror = this.onError;
-    this.ws.onclose = this.onClose;
+  useEffect(() => {
+    let socket: WebSocket;
 
-    this.setPlayers = setPlayers;
-  }
+    const connect = () => {
+      socket = new WebSocket(url);
+      ws.current = socket;
 
-  private onOpen = () => {
-    console.log("connected");
-  };
+      socket.onopen = () => setIsReady(true);
+      socket.onclose = () => {
+        setIsReady(false);
+        setTimeout(connect, 1000);
+      };
+      socket.onerror = console.error;
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data) as ServerMessage;
+          handler(message);
+        } catch (e) {
+          console.error(e);
+        }
+      };
+    };
 
-  private onMessage = (e: MessageEvent<any>) => {
-    console.log("message received");
+    connect();
+    return () => socket.close();
+  }, [url, handler]);
 
-    try {
-      const message = JSON.parse(e.data) as ServerMessage;
-      switch (message.event) {
-        case "NEW_GAME_OK":
-          console.log(message.data.gameId);
-          break;
-        case "JOIN_GAME_OK":
-          this.setPlayers(message.data.players);
-          break;
-        case "PLAYER_LEAVED":
-          break;
-        case "ERROR":
-          console.log(message.code);
-          break;
-        default:
-          throw new Error("Unknown server event");
-      }
-    } catch (error) {
-      console.error(error);
+  const send = (data: string) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(data);
     }
   };
 
-  private onError = () => {
-    console.error("an error occured");
-  };
-
-  private onClose = () => {
-    console.log("connection closed");
-  };
-
-  send = (data: string) => {
-    this.ws.send(data);
-  };
-}
+  return { isReady, send };
+};

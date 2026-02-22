@@ -27,14 +27,14 @@ export const handleNewGame = (
     return ws.send(JSON.stringify(result.error));
   }
 
-  const gameId = result.value;
+  const gameId = result.value.gameId;
 
   ws.data.gameId = gameId;
   ws.subscribe(gameId);
   ws.send(
     JSON.stringify({
       event: "NEW_GAME_OK",
-      data: { gameId },
+      data: { gameId, players: result.value.players },
     } as ServerMessage),
   );
 };

@@ -37,7 +37,7 @@ export const createGame = (games: Map<string, Player[]>, player: Player) => {
   const gameId = generateGameId(games);
   games.set(gameId, [player]);
 
-  return Ok(gameId);
+  return Ok({ gameId, players: games.get(gameId) });
 };
 
 export const joinGame = (
