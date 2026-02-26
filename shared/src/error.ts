@@ -1,7 +1,7 @@
 import type { ErrorCode, ServerError } from "./types";
 
 const newServerError = (code: ErrorCode) =>
-  ({ event: "ERROR", code }) satisfies ServerError;
+  ({ event: "ERROR", code }) as ServerError;
 
 export const GAME_NOT_FOUND = newServerError("GAME_NOT_FOUND");
 export const ALREADY_IN_A_GAME = newServerError("ALREADY_IN_A_GAME");
