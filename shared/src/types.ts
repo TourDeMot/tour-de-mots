@@ -34,3 +34,8 @@ export type ServerMessage =
   | { event: "NEW_GAME_OK"; data: { gameId: string, players: Player[] } }
   | { event: "JOIN_GAME_OK"; data: { players: Player[] } }
   | { event: "PLAYER_LEAVED"; data: { players: Player[] } };
+
+
+export type Game = {
+  players: Player[];
+};

@@ -1,9 +1,8 @@
-import type { Player, SocketData } from "@ws-poc/shared/types";
+import type { SocketData, Game } from "@ws-poc/shared/types";
 import { messageGateway } from "./gateways";
 import { handleClose } from "./handlers";
 
-// games are players id by game id
-const games = new Map<string, Player[]>();
+const games = new Map<string, Game>();
 
 const server = Bun.serve({
   port: 8080,

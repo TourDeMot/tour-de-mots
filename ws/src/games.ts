@@ -1,14 +1,14 @@
-import type { Player } from "@ws-poc/shared/types";
+import type { Player, Game } from "@ws-poc/shared/types";
 import { Err, Ok } from "@ws-poc/shared/result";
 import { ALREADY_IN_A_GAME, GAME_NOT_FOUND } from "@ws-poc/shared/error";
 
-export const isPlayerInGame = (games: Map<string, Player[]>, player: Player) =>
+export const isPlayerInGame = (games: Map<string, Game>, player: Player) =>
   Array.from(games.values())
-    .flat()
+    .flatMap((game) => game.players)
     .some(({ uuid }) => uuid === player.uuid);
 
 export const generateGameId = (
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
   length: number = 6,
 ): string => {
   let gameId: string;
@@ -29,19 +29,20 @@ export const addPlayer = (players: Player[], player: Player) =>
 export const removePlayer = (players: Player[], uuid: string) =>
   players.filter((player) => player.uuid !== uuid);
 
-export const createGame = (games: Map<string, Player[]>, player: Player) => {
+export const createGame = (games: Map<string, Game>, player: Player) => {
   if (isPlayerInGame(games, player)) {
     return Err(ALREADY_IN_A_GAME);
   }
 
   const gameId = generateGameId(games);
-  games.set(gameId, [player]);
+  const game: Game = { players: [player] };
+  games.set(gameId, game);
 
-  return Ok({ gameId, players: games.get(gameId) });
+  return Ok({ gameId, players: game.players });
 };
 
 export const joinGame = (
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
   gameId: string,
   player: Player,
 ) => {
@@ -50,22 +51,22 @@ export const joinGame = (
 
   if (isPlayerInGame(games, player)) return Err(ALREADY_IN_A_GAME);
 
-  const updatedPlayers = addPlayer(game, player);
-  games.set(gameId, updatedPlayers);
+  const updatedPlayers = addPlayer(game.players, player);
+  games.set(gameId, { ...game, players: updatedPlayers });
 
   return Ok(updatedPlayers);
 };
 
 export const leaveGame = (
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
   gameId: string,
   uuid: string,
 ) => {
   const game = games.get(gameId);
   if (!game) return Err(GAME_NOT_FOUND);
 
-  const updatedPlayers = removePlayer(game, uuid);
-  games.set(gameId, updatedPlayers);
+  const updatedPlayers = removePlayer(game.players, uuid);
+  games.set(gameId, { ...game, players: updatedPlayers });
 
   if (!updatedPlayers.length) {
     games.delete(gameId);

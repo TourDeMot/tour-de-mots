@@ -1,12 +1,12 @@
 import type { ServerWebSocket } from "bun";
-import type { Player, SocketData, ClientMessage } from "@ws-poc/shared/types";
+import type { Game, SocketData, ClientMessage } from "@ws-poc/shared/types";
 import { handleNewGame, handleJoinGame } from "./handlers";
 import { UNKNOWN_EVENT } from "@ws-poc/shared/error";
 
 export const messageRouter = (
   ws: ServerWebSocket<SocketData>,
   message: ClientMessage,
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
 ) => {
   switch (message.event) {
     case "NEW_GAME":
