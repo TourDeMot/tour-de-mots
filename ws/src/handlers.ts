@@ -1,7 +1,7 @@
 import type {
+  Game,
   JoinGameMessage,
   NewGameMessage,
-  Player,
   ServerMessage,
   SocketData,
 } from "@ws-poc/shared/types";
@@ -12,7 +12,7 @@ import { createGame, joinGame, leaveGame } from "./games";
 export const handleNewGame = (
   ws: ServerWebSocket<SocketData>,
   message: NewGameMessage,
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
 ) => {
   if (ws.data.gameId) {
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
@@ -42,7 +42,7 @@ export const handleNewGame = (
 export const handleJoinGame = (
   ws: ServerWebSocket<SocketData>,
   message: JoinGameMessage,
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
 ) => {
   if (!message.gameId) {
     return ws.send(JSON.stringify(MISSING_GAME_ID));
@@ -77,7 +77,7 @@ export const handleJoinGame = (
 
 export const handleClose = (
   ws: ServerWebSocket<SocketData>,
-  games: Map<string, Player[]>,
+  games: Map<string, Game>,
 ) => {
   const { uuid, gameId } = ws.data;
   if (!gameId) return;
