@@ -5,6 +5,8 @@ import { handleClose } from "./handlers";
 // games are players id by game id
 const games = new Map<string, Player[]>();
 
+// BOSSS
+
 const server = Bun.serve({
   port: 8080,
   fetch(req, server) {
