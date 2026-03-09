@@ -1,4 +1,4 @@
-import type { ServerMessage } from "@ws-poc/shared/types";
+import type { ServerMessage } from "@tour-de-mot/shared/types";
 import type { GameState } from "../types";
 import { handleError } from "./error";
 import { handleJoinGameOk } from "./joinGame";

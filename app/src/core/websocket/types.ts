@@ -1,4 +1,4 @@
-import type { Player, ErrorCode } from "@ws-poc/shared/types";
+import type { Player, ErrorCode } from "@tour-de-mot/shared/types";
 
 export type GameState = {
   code: string;

@@ -1,4 +1,4 @@
-import type { ClientMessage } from "@ws-poc/shared/types";
+import type { ClientMessage } from "@tour-de-mot/shared/types";
 import { useReducer, useState } from "react";
 import { useWs } from "@/core/websocket/useWs";
 import { handleMessage } from "@/core/websocket/handlers";

@@ -1,6 +1,6 @@
-import type { Player, Game } from "../../shared/src/types";
-import { Err, Ok } from "../../shared/src/result";
-import { ALREADY_IN_A_GAME, GAME_NOT_FOUND } from "../../shared/src/error";
+import type { Player, Game } from "@tour-de-mot/shared/types";
+import { Err, Ok } from "@tour-de-mot/shared/result";
+import { ALREADY_IN_A_GAME, GAME_NOT_FOUND } from "@tour-de-mot/shared/error";
 
 export const isPlayerInGame = (games: Map<string, Game>, player: Player) =>
   Array.from(games.values())

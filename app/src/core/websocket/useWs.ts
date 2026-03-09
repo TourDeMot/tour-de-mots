@@ -1,4 +1,4 @@
-import type { ServerMessage } from "@ws-poc/shared/types";
+import type { ServerMessage } from "@tour-de-mot/shared/types";
 import { useEffect, useRef, useState } from "react";
 
 export function useWs(url: string, dispatch: (message: ServerMessage) => void) {

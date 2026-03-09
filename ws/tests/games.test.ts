@@ -10,8 +10,8 @@ import {
   isPlayerInGame,
   generateGameId,
 } from "../src/games";
-import { ALREADY_IN_A_GAME, GAME_NOT_FOUND } from "@ws-poc/shared/error";
-import type { Player } from "@ws-poc/shared/types";
+import { ALREADY_IN_A_GAME, GAME_NOT_FOUND } from "@tour-de-mot/shared/error";
+import type { Player } from "@tour-de-mot/shared/types";
 
 const comparePlayers = (a: Player[], b: Player[]): boolean =>
   a.length === b.length &&

@@ -1,6 +1,6 @@
 import { messageRouter } from "./routers";
-import type { ClientMessage, Game, SocketData } from "../../shared/src/types";
-import { MISSING_UUID, BAD_JSON } from "../../shared/src/error";
+import type { ClientMessage, Game, SocketData } from "@tour-de-mot/shared/types";
+import { MISSING_UUID, BAD_JSON } from "@tour-de-mot/shared/error";
 import type { ServerWebSocket } from "bun";
 
 export const messageGateway = (
