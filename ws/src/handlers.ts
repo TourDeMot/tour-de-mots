@@ -4,8 +4,8 @@ import type {
   NewGameMessage,
   ServerMessage,
   SocketData,
-} from "@ws-poc/shared/types";
-import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@ws-poc/shared/error";
+} from "../../shared/src/types";
+import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "../../shared/src/error";
 import type { ServerWebSocket } from "bun";
 import { createGame, joinGame, leaveGame } from "./games";
 

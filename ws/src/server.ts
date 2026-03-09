@@ -1,4 +1,4 @@
-import type { SocketData, Game } from "@ws-poc/shared/types";
+import type { SocketData, Game } from "../../shared/src/types";
 import { messageGateway } from "./gateways";
 import { handleClose } from "./handlers";
 
