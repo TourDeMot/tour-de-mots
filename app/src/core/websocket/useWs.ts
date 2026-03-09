@@ -1,7 +1,7 @@
-import type { ServerMessage } from "@ws-poc/shared/types"
-import { useEffect, useRef, useState } from "react"
+import type { ServerMessage } from "@ws-poc/shared/types";
+import { useEffect, useRef, useState } from "react";
 
-export const useWs = (url: string, handler: (s: ServerMessage) => void) => {
+export function useWs(url: string, dispatch: (message: ServerMessage) => void) {
   const [isReady, setIsReady] = useState(false);
   const ws = useRef<WebSocket | null>(null);
 
@@ -21,7 +21,7 @@ export const useWs = (url: string, handler: (s: ServerMessage) => void) => {
       socket.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data) as ServerMessage;
-          handler(message);
+          dispatch(message);
         } catch (e) {
           console.error(e);
         }
@@ -30,7 +30,7 @@ export const useWs = (url: string, handler: (s: ServerMessage) => void) => {
 
     connect();
     return () => socket.close();
-  }, [url, handler]);
+  }, [url, dispatch]);
 
   const send = (data: string) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -39,4 +39,4 @@ export const useWs = (url: string, handler: (s: ServerMessage) => void) => {
   };
 
   return { isReady, send };
-};
+}

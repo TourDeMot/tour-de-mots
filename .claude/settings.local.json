@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run --filter app build)",
+      "Bash(bun run build)"
+    ]
+  }
+}
