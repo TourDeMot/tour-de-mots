@@ -8,7 +8,7 @@ export type Player = {
   pseudo: string;
 };
 
-// Type Générique
+// Generic type
 type Message<E extends MessageEvent, D extends MessagePayload> = { event: E; data: D };
 export type MessageEvent = ClientEvent |  ServerEvent | ErrorCode;
 export type MessagePayload = NewGamePayload | JoinGamePayload | NewGameOkPayload | JoinGameOkPayload | PlayerLeavedPayload | ServerErrorPayload;
