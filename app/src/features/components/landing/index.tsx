@@ -6,7 +6,7 @@ import { initialGameState } from "@/core/websocket/types";
 
 export default function LandingComponent() {
 
-  const [state, dispatch] = useReducer(handleMessage, initialGameState);
+  const [game, dispatch] = useReducer(handleMessage, initialGameState);
   const { isReady, send } = useWs("ws://localhost:8080/ws", dispatch);
   const [pseudo, setPseudo] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -30,9 +30,9 @@ export default function LandingComponent() {
       <br />
       <input type="text" placeholder="Code pour Rejoindre" value={joinCode} onChange={e => setJoinCode(e.target.value)}/>
       <button onClick={onJoinGame}>Join Game</button>
-      {state.code && <p>{state.code}</p>}
+      {game.gameId && <p>{game.gameId}</p>}
       <ul>
-        {state.players.map(player => (
+        {game.players.map(player => (
           <li key={player.uuid}>{player.pseudo}</li>
         ))}
           </ul>
