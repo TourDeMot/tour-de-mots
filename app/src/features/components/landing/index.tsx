@@ -13,13 +13,13 @@ export default function LandingComponent() {
 
   function onCreateGame() {
     if (isReady && pseudo) {
-      send(JSON.stringify({ event: "NEW_GAME", pseudo } as ClientMessage));
+      send(JSON.stringify({ event: "NEW_GAME", data: { pseudo : pseudo } } as ClientMessage));
     }
   }
 
   function onJoinGame() {
     if (isReady && pseudo && joinCode) {
-      send(JSON.stringify({ event: "JOIN_GAME", pseudo, gameId: joinCode } as ClientMessage));
+      send(JSON.stringify({ event: "JOIN_GAME",  data: { pseudo : pseudo, gameId: joinCode} } as ClientMessage));
     }
   }
   return (
