@@ -1,13 +1,11 @@
 import type { Player, ErrorCode } from "@tour-de-mot/shared/types";
 
 export type GameState = {
-  code: string;
+  gameId: string;
   players: Player[];
-  error: ErrorCode | null;
 };
 
 export const initialGameState: GameState = {
-  code: "",
+  gameId: "",
   players: [],
-  error: null,
 };
