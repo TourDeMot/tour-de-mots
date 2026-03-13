@@ -21,7 +21,7 @@ export const handleNewGame = (
 
   const result = createGame(games, {
     uuid: ws.data.uuid,
-    pseudo: message.data.pseudo,
+    pseudo: payload.pseudo,
   });
 
   if (!result.ok) {
@@ -45,7 +45,7 @@ export const handleJoinGame = (
   games: Map<string, Game>,
   payload: Payload<"JOIN_GAME">,
 ) => {
-  if (!message.data.gameId) {
+  if (!payload.gameId) {
     return ws.send(JSON.stringify(MISSING_GAME_ID));
   }
 
@@ -53,23 +53,23 @@ export const handleJoinGame = (
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
   }
 
-  const result = joinGame(games, message.data.gameId, {
+  const result = joinGame(games, payload.gameId, {
     uuid: ws.data.uuid,
-    pseudo: message.data.pseudo,
+    pseudo: payload.pseudo,
   });
   if (!result.ok) {
     return ws.send(JSON.stringify(result.error));
   }
 
-  ws.data.gameId = message.data.gameId;
-  ws.subscribe(message.data.gameId);
+  ws.data.gameId = payload.gameId;
+  ws.subscribe(payload.gameId);
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
     data: { players: result.value },
   } as ServerMessage);
 
-  ws.publish(message.data.gameId, responsePayload);
+  ws.publish(payload.gameId, responsePayload);
 
   // publish does not send to the current client so we need to send the message to it too
   return ws.send(responsePayload);
