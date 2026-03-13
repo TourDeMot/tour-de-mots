@@ -8,11 +8,12 @@ import type {
 import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@ws-poc/shared/error";
 import type { ServerWebSocket } from "bun";
 import { createGame, joinGame, leaveGame } from "./games";
+import type { Payload } from "./messages";
 
 export const handleNewGame = (
   ws: ServerWebSocket<SocketData>,
-  message: NewGameMessage,
   games: Map<string, Game>,
+  payload: Payload<"NEW_GAME">,
 ) => {
   if (ws.data.gameId) {
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
@@ -20,7 +21,7 @@ export const handleNewGame = (
 
   const result = createGame(games, {
     uuid: ws.data.uuid,
-    pseudo: message.pseudo,
+    pseudo: payload.pseudo,
   });
 
   if (!result.ok) {
@@ -31,7 +32,7 @@ export const handleNewGame = (
 
   ws.data.gameId = gameId;
   ws.subscribe(gameId);
-  ws.send(
+  return ws.send(
     JSON.stringify({
       event: "NEW_GAME_OK",
       data: { gameId, players: result.value.players },
@@ -41,10 +42,10 @@ export const handleNewGame = (
 
 export const handleJoinGame = (
   ws: ServerWebSocket<SocketData>,
-  message: JoinGameMessage,
   games: Map<string, Game>,
+  payload: Payload<"JOIN_GAME">,
 ) => {
-  if (!message.gameId) {
+  if (!payload.gameId) {
     return ws.send(JSON.stringify(MISSING_GAME_ID));
   }
 
@@ -52,27 +53,26 @@ export const handleJoinGame = (
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
   }
 
-  const result = joinGame(games, message.gameId, {
+  const result = joinGame(games, payload.gameId, {
     uuid: ws.data.uuid,
-    pseudo: message.pseudo,
+    pseudo: payload.pseudo,
   });
   if (!result.ok) {
-    ws.send(JSON.stringify(result.error));
-    return;
+    return ws.send(JSON.stringify(result.error));
   }
 
-  ws.data.gameId = message.gameId;
-  ws.subscribe(message.gameId);
+  ws.data.gameId = payload.gameId;
+  ws.subscribe(payload.gameId);
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
     data: { players: result.value },
   } as ServerMessage);
 
-  ws.publish(message.gameId, responsePayload);
+  ws.publish(payload.gameId, responsePayload);
 
   // publish does not send to the current client so we need to send the message to it too
-  ws.send(responsePayload);
+  return ws.send(responsePayload);
 };
 
 export const handleClose = (
