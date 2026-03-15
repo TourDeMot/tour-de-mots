@@ -1,11 +1,11 @@
-import type { Player, ErrorCode } from "@tour-de-mot/shared/types";
+import type { Player } from "@tour-de-mot/shared/types";
 
-export type GameState = {
+export type Game = {
   gameId: string;
   players: Player[];
 };
 
-export const initialGameState: GameState = {
+export const initialGameState: Game = {
   gameId: "",
   players: [],
 };

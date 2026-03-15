@@ -1,6 +1,6 @@
 import type { ErrorCode } from "@tour-de-mot/shared/types";
-import type { GameState } from "../types";
+import type { Game } from "../types";
 
-export function handleError(state: GameState, code: ErrorCode): GameState {
+export function handleError(state: Game, code: ErrorCode): Game {
   return { ...state};
 }

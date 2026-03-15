@@ -1,6 +1,6 @@
 import type { NewGameOkPayload } from "@tour-de-mot/shared/types";
-import type { GameState } from "../types";
+import type { Game } from "../types";
 
-export function handleNewGameOk(state: GameState, data: NewGameOkPayload): GameState {
+export function handleNewGameOk(state: Game, data: NewGameOkPayload): Game {
   return { ...state, gameId: data.gameId, players: data.players };
 }
