@@ -43,7 +43,14 @@ export type ErrorCode =
   export type NewGameOkMessage = Message<"NEW_GAME_OK", NewGameOkPayload>;
   export type JoinGameOkMessage = Message<"JOIN_GAME_OK", JoinGameOkPayload>;
   export type PlayerLeavedMessage = Message<"PLAYER_LEAVED", PlayerLeavedPayload>;
-  export type ServerErrorMessage = Message<"ERROR", ServerErrorPayload>;
+export type ServerErrorMessage = Message<"ERROR", ServerErrorPayload>;
+
+export type ServerEventPayloadMap = {
+  "NEW_GAME_OK":   NewGameOkPayload;
+  "JOIN_GAME_OK":  JoinGameOkPayload;
+  "PLAYER_LEAVED": PlayerLeavedPayload;
+};
+
 
 export type Game = {
   players: Player[];
