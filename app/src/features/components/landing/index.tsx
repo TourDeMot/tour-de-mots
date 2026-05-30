@@ -23,7 +23,7 @@ export default function LandingComponent() {
   }
   return (
     <div>
-      <h1>WS POC</h1>
+      <h1>Tour De Mot</h1>
       <input type="text" placeholder="Pseudo" value={pseudo} onChange={e => setPseudo(e.target.value)}/>
       <button onClick={onCreateGame}>Create game</button>
       <br />

@@ -1,5 +1,5 @@
 {
-  "name": "ws-poc",
+  "name": "tour-de-mot",
   "private": true,
   "workspaces": [
     "app",

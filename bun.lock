@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "ws-poc",
+      "name": "tour-de-mot",
     },
     "app": {
       "name": "bun-react-template",
