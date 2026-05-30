@@ -35,7 +35,7 @@ export const handleNewGame = (
   return ws.send(
     JSON.stringify({
       event: "NEW_GAME_OK",
-      data: { gameId, players: result.value.players },
+      payload: { gameId, players: result.value.players },
     } as ServerMessage),
   );
 };
@@ -66,7 +66,7 @@ export const handleJoinGame = (
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
-    data: { players: result.value },
+    payload: { players: result.value },
   } as ServerMessage);
 
   ws.publish(payload.gameId, responsePayload);
@@ -92,7 +92,7 @@ export const handleClose = (
       gameId,
       JSON.stringify({
         event: "PLAYER_LEAVED",
-        data: { players: result.value },
+        payload: { players: result.value },
       } as ServerMessage),
     );
   }
