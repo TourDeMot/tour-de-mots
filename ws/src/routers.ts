@@ -1,7 +1,7 @@
 import type { ServerWebSocket } from "bun";
-import type { Game, SocketData, ClientMessage } from "@ws-poc/shared/types";
+import type { Game, SocketData, ClientMessage } from "@tour-de-mot/shared/types";
 import { handleNewGame, handleJoinGame } from "./handlers";
-import { UNKNOWN_EVENT } from "@ws-poc/shared/error";
+import { UNKNOWN_EVENT } from "@tour-de-mot/shared/error";
 
 export const messageRouter = (
   ws: ServerWebSocket<SocketData>,

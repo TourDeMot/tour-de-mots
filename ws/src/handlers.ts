@@ -4,8 +4,8 @@ import type {
   NewGameMessage,
   ServerMessage,
   SocketData,
-} from "@ws-poc/shared/types";
-import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@ws-poc/shared/error";
+} from "@tour-de-mot/shared/types";
+import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@tour-de-mot/shared/error";
 import type { ServerWebSocket } from "bun";
 import { createGame, joinGame, leaveGame } from "./games";
 
@@ -20,7 +20,7 @@ export const handleNewGame = (
 
   const result = createGame(games, {
     uuid: ws.data.uuid,
-    pseudo: message.pseudo,
+    pseudo: message.data.pseudo,
   });
 
   if (!result.ok) {
@@ -44,7 +44,7 @@ export const handleJoinGame = (
   message: JoinGameMessage,
   games: Map<string, Game>,
 ) => {
-  if (!message.gameId) {
+  if (!message.data.gameId) {
     return ws.send(JSON.stringify(MISSING_GAME_ID));
   }
 
@@ -52,24 +52,24 @@ export const handleJoinGame = (
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
   }
 
-  const result = joinGame(games, message.gameId, {
+  const result = joinGame(games, message.data.gameId, {
     uuid: ws.data.uuid,
-    pseudo: message.pseudo,
+    pseudo: message.data.pseudo,
   });
   if (!result.ok) {
     ws.send(JSON.stringify(result.error));
     return;
   }
 
-  ws.data.gameId = message.gameId;
-  ws.subscribe(message.gameId);
+  ws.data.gameId = message.data.gameId;
+  ws.subscribe(message.data.gameId);
 
   const responsePayload = JSON.stringify({
     event: "JOIN_GAME_OK",
     data: { players: result.value },
   } as ServerMessage);
 
-  ws.publish(message.gameId, responsePayload);
+  ws.publish(message.data.gameId, responsePayload);
 
   // publish does not send to the current client so we need to send the message to it too
   ws.send(responsePayload);
