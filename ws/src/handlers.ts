@@ -8,11 +8,12 @@ import type {
 import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@tour-de-mot/shared/error";
 import type { ServerWebSocket } from "bun";
 import { createGame, joinGame, leaveGame } from "./games";
+import type { Payload } from "./messages";
 
 export const handleNewGame = (
   ws: ServerWebSocket<SocketData>,
-  message: NewGameMessage,
   games: Map<string, Game>,
+  payload: Payload<"NEW_GAME">,
 ) => {
   if (ws.data.gameId) {
     return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
@@ -31,7 +32,7 @@ export const handleNewGame = (
 
   ws.data.gameId = gameId;
   ws.subscribe(gameId);
-  ws.send(
+  return ws.send(
     JSON.stringify({
       event: "NEW_GAME_OK",
       data: { gameId, players: result.value.players },
@@ -41,8 +42,8 @@ export const handleNewGame = (
 
 export const handleJoinGame = (
   ws: ServerWebSocket<SocketData>,
-  message: JoinGameMessage,
   games: Map<string, Game>,
+  payload: Payload<"JOIN_GAME">,
 ) => {
   if (!message.data.gameId) {
     return ws.send(JSON.stringify(MISSING_GAME_ID));
@@ -57,8 +58,7 @@ export const handleJoinGame = (
     pseudo: message.data.pseudo,
   });
   if (!result.ok) {
-    ws.send(JSON.stringify(result.error));
-    return;
+    return ws.send(JSON.stringify(result.error));
   }
 
   ws.data.gameId = message.data.gameId;
@@ -72,7 +72,7 @@ export const handleJoinGame = (
   ws.publish(message.data.gameId, responsePayload);
 
   // publish does not send to the current client so we need to send the message to it too
-  ws.send(responsePayload);
+  return ws.send(responsePayload);
 };
 
 export const handleClose = (
