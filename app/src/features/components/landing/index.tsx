@@ -1,4 +1,3 @@
-import type { ClientMessage } from "@tour-de-mot/shared/types";
 import { useReducer, useState } from "react";
 import { useWs } from "@/core/websocket/useWs";
 import { handleMessage } from "@/core/websocket/handlers";
@@ -13,13 +12,13 @@ export default function LandingComponent() {
 
   function onCreateGame() {
     if (isReady && pseudo) {
-      send(JSON.stringify({ event: "NEW_GAME", data: { pseudo : pseudo } } as ClientMessage));
+      send(JSON.stringify({ event: "NEW_GAME", payload: { pseudo } }));
     }
   }
 
   function onJoinGame() {
     if (isReady && pseudo && joinCode) {
-      send(JSON.stringify({ event: "JOIN_GAME",  data: { pseudo : pseudo, gameId: joinCode} } as ClientMessage));
+      send(JSON.stringify({ event: "JOIN_GAME", payload: { pseudo, gameId: joinCode } }));
     }
   }
   return (

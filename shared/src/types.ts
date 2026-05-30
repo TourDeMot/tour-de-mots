@@ -9,7 +9,7 @@ export type Player = {
 };
 
 // Generic type
-type Message<E extends MessageEvent, D extends MessagePayload> = { event: E; data: D };
+type Message<E extends MessageEvent, D extends MessagePayload> = { event: E; payload: D };
 export type MessageEvent = ClientEvent |  ServerEvent | ErrorCode;
 export type MessagePayload = NewGamePayload | JoinGamePayload | NewGameOkPayload | JoinGameOkPayload | PlayerLeavedPayload | ServerErrorPayload;
 export type ClientMessage = NewGameMessage | JoinGameMessage;
@@ -27,6 +27,8 @@ export type ErrorCode =
   | "ALREADY_IN_A_GAME"
   | "GAME_EMPTY";
 
+  export type ServerError = { event: "ERROR"; code: ErrorCode };
+
 // Payload
   export type NewGamePayload = { pseudo: string };
   export type JoinGamePayload = { pseudo: string; gameId: string };
@@ -43,7 +45,7 @@ export type ErrorCode =
   export type NewGameOkMessage = Message<"NEW_GAME_OK", NewGameOkPayload>;
   export type JoinGameOkMessage = Message<"JOIN_GAME_OK", JoinGameOkPayload>;
   export type PlayerLeavedMessage = Message<"PLAYER_LEAVED", PlayerLeavedPayload>;
-export type ServerErrorMessage = Message<"ERROR", ServerErrorPayload>;
+  export type ServerErrorMessage = Message<"ERROR", ServerErrorPayload>;
 
 export type ServerEventPayloadMap = {
   "NEW_GAME_OK":   NewGameOkPayload;

@@ -1,8 +1,7 @@
 import type { ServerWebSocket } from "bun";
-<<<<<<< HEAD
-import type { Game, SocketData } from "@ws-poc/shared/types";
+import type { Game, SocketData } from "@tour-de-mot/shared/types";
 import { handleNewGame, handleJoinGame } from "./handlers";
-import { UNKNOWN_EVENT } from "@ws-poc/shared/error";
+import { UNKNOWN_EVENT } from "@tour-de-mot/shared/error";
 import type { Event, Payload, ClientMessage } from "./messages";
 
 type Handler<E extends Event> =

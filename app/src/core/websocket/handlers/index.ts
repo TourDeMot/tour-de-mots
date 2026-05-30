@@ -16,10 +16,10 @@ const handlers: { [E in keyof ServerEventPayloadMap]: Handler<E> } = {
 
 export function handleMessage(state: Game, message: ServerMessage): Game {
   if (message.event === "ERROR") {
-    return handleError(state, message.data.code);
+    return handleError(state, message.payload.code);
   }
 
   const handler = handlers[message.event];
   if (!handler) throw new Error(`Unknown event: ${message.event}`);
-  return (handler as Handler<typeof message.event>)(state, message.data);
+  return (handler as Handler<typeof message.event>)(state, message.payload);
 }
