@@ -8,6 +8,7 @@ import type { Ctx } from "./context";
 import { send } from "./context";
 import {
   handleJoinGame,
+  handleLeaveGame,
   handleNewGame,
   handleStartGame,
   handleSubmitSentence,
@@ -23,6 +24,7 @@ const handlers: { [E in ClientEvent]: Handler<E> } = {
   JOIN_GAME: handleJoinGame,
   START_GAME: handleStartGame,
   SUBMIT_SENTENCE: handleSubmitSentence,
+  LEAVE_GAME: handleLeaveGame,
 };
 
 export const messageRouter = (ctx: Ctx, message: ClientMessage) => {

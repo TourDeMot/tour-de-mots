@@ -10,6 +10,7 @@ import { handlePlayerLeaved } from "./playerLeaved";
 import { handleGameStarted } from "./gameStarted";
 import { handlePrompt } from "./prompt";
 import { handleGameFinished } from "./gameFinished";
+import { handleLeftGameOk } from "./leftGame";
 
 type Handler<E extends keyof ServerEventPayloadMap> = (
   state: Game,
@@ -23,6 +24,7 @@ const handlers: { [E in keyof ServerEventPayloadMap]: Handler<E> } = {
   GAME_STARTED: handleGameStarted,
   PROMPT: handlePrompt,
   GAME_FINISHED: handleGameFinished,
+  LEFT_GAME_OK: handleLeftGameOk,
   ERROR: handleError,
 };
 

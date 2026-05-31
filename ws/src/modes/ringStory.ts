@@ -53,15 +53,23 @@ const promptFor = (state: RingStoryState, uuid: string): Outbound => {
   };
 };
 
-/** Construit le message GAME_FINISHED (toutes les histoires) pour tout le monde. */
-const finishedMessages = (state: RingStoryState): Outbound[] => {
+/**
+ * Construit le message GAME_FINISHED (toutes les histoires).
+ * `except` permet d'exclure un joueur (celui qui vient de quitter).
+ */
+const finishedMessages = (
+  state: RingStoryState,
+  except?: string,
+): Outbound[] => {
   const stories: Story[] = state.stories.map((contributions) => ({
     contributions,
   }));
-  return state.order.map((uuid) => ({
-    to: uuid,
-    message: { event: "GAME_FINISHED", payload: { stories } },
-  }));
+  return state.order
+    .filter((uuid) => uuid !== except)
+    .map((uuid) => ({
+      to: uuid,
+      message: { event: "GAME_FINISHED", payload: { stories } },
+    }));
 };
 
 export const ringStoryMode: GameMode<RingStoryState> = {
@@ -132,5 +140,15 @@ export const ringStoryMode: GameMode<RingStoryState> = {
     // sinon → nouveau prompt personnalisé pour chaque joueur
     const outbound = next.order.map((uuid) => promptFor(next, uuid));
     return Ok({ state: next, outbound, finished: false });
+  },
+
+  onLeave(state, playerUuid) {
+    // un joueur manque → l'anneau ne peut plus tourner. On arrête la partie et
+    // on révèle les histoires en l'état aux joueurs restants.
+    return {
+      state,
+      outbound: finishedMessages(state, playerUuid),
+      finished: true,
+    };
   },
 };

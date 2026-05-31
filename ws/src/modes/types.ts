@@ -44,4 +44,10 @@ export interface GameMode<State> {
     player: Player,
     text: string,
   ): Result<SubmitOutcome<State>, ServerMessage<"ERROR">>;
+
+  /**
+   * Réagit au départ d'un joueur EN COURS de partie (déconnexion ou bouton
+   * « quitter »). Le mode décide quoi faire : continuer, ou arrêter la partie.
+   */
+  onLeave(state: State, playerUuid: string): SubmitOutcome<State>;
 }

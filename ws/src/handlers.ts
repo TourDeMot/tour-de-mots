@@ -122,20 +122,66 @@ export const handleSubmitSentence = (
   for (const out of outbound) sendTo(ctx, out.to, out.message);
 };
 
-export const handleClose = (ctx: Ctx) => {
+/**
+ * Logique commune de départ d'un joueur (déconnexion OU bouton « quitter »).
+ *
+ * - si la partie est EN COURS, on prévient le mode (qui peut l'arrêter) ;
+ * - puis on retire le joueur et on informe les autres de la nouvelle liste.
+ */
+const applyLeave = (ctx: Ctx, gameId: string, uuid: string) => {
   const { ws, games } = ctx;
-  const { uuid, gameId } = ws.data;
-  if (!gameId) return;
+  const game = games.get(gameId);
+  if (!game) return;
 
+  // partie en cours → laisser le mode décider (Ring Story arrête et révèle)
+  if (game.phase === "PLAYING" && game.mode) {
+    const mode = getMode(game.mode);
+    if (mode) {
+      const outcome = mode.onLeave(game.modeState, uuid);
+      games.set(gameId, {
+        ...game,
+        modeState: outcome.state,
+        phase: outcome.finished ? "FINISHED" : "PLAYING",
+      });
+      for (const out of outcome.outbound) sendTo(ctx, out.to, out.message);
+    }
+  }
+
+  // retirer le joueur de la partie (supprime la partie si elle devient vide)
   const result = leaveGame(games, gameId, uuid);
   if (!result.ok) return;
 
-  ws.unsubscribe(gameId);
-
+  // prévenir les joueurs restants de la nouvelle liste (utile en lobby)
   if (result.value.length !== 0) {
     broadcast(ws, gameId, {
       event: "PLAYER_LEAVED",
       payload: { players: result.value },
     });
   }
+};
+
+/** Départ volontaire : le socket reste ouvert, le client revient à l'accueil. */
+export const handleLeaveGame = (
+  ctx: Ctx,
+  _payload: ClientPayload<"LEAVE_GAME">,
+) => {
+  const { ws } = ctx;
+  const gameId = ws.data.gameId;
+  if (!gameId) return send(ws, NOT_IN_GAME);
+
+  applyLeave(ctx, gameId, ws.data.uuid);
+
+  ws.unsubscribe(gameId);
+  ws.data.gameId = undefined;
+  send(ws, { event: "LEFT_GAME_OK", payload: {} });
+};
+
+/** Déconnexion brutale (fermeture de l'onglet, coupure réseau). */
+export const handleClose = (ctx: Ctx) => {
+  const { ws } = ctx;
+  const gameId = ws.data.gameId;
+  if (!gameId) return;
+
+  applyLeave(ctx, gameId, ws.data.uuid);
+  ws.unsubscribe(gameId);
 };

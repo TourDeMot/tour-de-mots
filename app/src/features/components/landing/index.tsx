@@ -36,6 +36,9 @@ export default function LandingComponent() {
       setHasSubmitted(true);
     }
   }
+  function onLeaveGame() {
+    emit({ event: "LEAVE_GAME", payload: {} });
+  }
 
   // Pas encore dans une partie → écran d'accueil
   if (!game.gameId) {
@@ -74,9 +77,12 @@ export default function LandingComponent() {
       </ul>
 
       {game.phase === "LOBBY" && (
-        <button onClick={onStartGame} disabled={game.players.length < 2}>
-          Démarrer (Ring Story)
-        </button>
+        <div>
+          <button onClick={onStartGame} disabled={game.players.length < 2}>
+            Démarrer (Ring Story)
+          </button>
+          <button onClick={onLeaveGame}>Quitter le salon</button>
+        </div>
       )}
 
       {game.phase === "PLAYING" && game.prompt && (
@@ -101,6 +107,8 @@ export default function LandingComponent() {
               <button onClick={onSubmitSentence}>Envoyer</button>
             </div>
           )}
+          <br />
+          <button onClick={onLeaveGame}>Quitter la partie</button>
         </div>
       )}
 
@@ -117,6 +125,7 @@ export default function LandingComponent() {
               ))}
             </div>
           ))}
+          <button onClick={onLeaveGame}>Retour à l'accueil</button>
         </div>
       )}
     </div>

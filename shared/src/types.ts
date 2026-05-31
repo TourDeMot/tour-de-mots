@@ -67,6 +67,8 @@ export type NewGamePayload = { pseudo: string };
 export type JoinGamePayload = { pseudo: string; gameId: string };
 export type StartGamePayload = { mode: GameModeId };
 export type SubmitSentencePayload = { text: string };
+/** Quitter sa partie (lobby, en cours, ou terminée). Aucune donnée nécessaire. */
+export type LeaveGamePayload = Record<string, never>;
 
 /** Table des messages que le client envoie au serveur. */
 export type ClientEventPayloadMap = {
@@ -74,6 +76,7 @@ export type ClientEventPayloadMap = {
   JOIN_GAME: JoinGamePayload;
   START_GAME: StartGamePayload;
   SUBMIT_SENTENCE: SubmitSentencePayload;
+  LEAVE_GAME: LeaveGamePayload;
 };
 
 // ===========================================================================
@@ -97,6 +100,8 @@ export type PromptPayload = {
 
 export type GameFinishedPayload = { stories: Story[] };
 export type ErrorPayload = { code: ErrorCode };
+/** Confirme au joueur qu'il a bien quitté → son client revient à l'accueil. */
+export type LeftGameOkPayload = Record<string, never>;
 
 /** Table des messages que le serveur envoie au client. */
 export type ServerEventPayloadMap = {
@@ -106,6 +111,7 @@ export type ServerEventPayloadMap = {
   GAME_STARTED: GameStartedPayload;
   PROMPT: PromptPayload;
   GAME_FINISHED: GameFinishedPayload;
+  LEFT_GAME_OK: LeftGameOkPayload;
   ERROR: ErrorPayload;
 };
 
