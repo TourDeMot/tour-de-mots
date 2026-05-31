@@ -1,27 +1,33 @@
-import type { ServerWebSocket } from "bun";
-import type { Game, SocketData } from "@tour-de-mot/shared/types";
-import { handleNewGame, handleJoinGame } from "./handlers";
+import type {
+  ClientEvent,
+  ClientMessage,
+  ClientPayload,
+} from "@tour-de-mot/shared/types";
 import { UNKNOWN_EVENT } from "@tour-de-mot/shared/error";
-import type { Event, Payload, ClientMessage } from "./messages";
+import type { Ctx } from "./context";
+import { send } from "./context";
+import {
+  handleJoinGame,
+  handleNewGame,
+  handleStartGame,
+  handleSubmitSentence,
+} from "./handlers";
 
-type Handler<E extends Event> =
-  (ws: ServerWebSocket<SocketData>, games: Map<string, Game>, payload: Payload<E>) => number;
+type Handler<E extends ClientEvent> = (
+  ctx: Ctx,
+  payload: ClientPayload<E>,
+) => void;
 
-const handlers: {
-  [E in Event]: Handler<E>
-} = {
+const handlers: { [E in ClientEvent]: Handler<E> } = {
   NEW_GAME: handleNewGame,
   JOIN_GAME: handleJoinGame,
+  START_GAME: handleStartGame,
+  SUBMIT_SENTENCE: handleSubmitSentence,
 };
 
-export const messageRouter = <E extends Event> (
-  ws: ServerWebSocket<SocketData>,
-  games: Map<string, Game>,
-  message: ClientMessage<E>,
-) => {
+export const messageRouter = (ctx: Ctx, message: ClientMessage) => {
   const handler = handlers[message.event];
-  if (!handler) {
-    return ws.send(JSON.stringify(UNKNOWN_EVENT));
-  }
-  return handler(ws, games, message.payload);
+  if (!handler) return send(ctx.ws, UNKNOWN_EVENT);
+  // event et payload proviennent du même message → corrélés à l'exécution
+  (handler as (ctx: Ctx, payload: unknown) => void)(ctx, message.payload);
 };

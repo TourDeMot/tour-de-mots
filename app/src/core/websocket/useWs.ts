@@ -6,7 +6,10 @@ export function useWs(url: string, dispatch: (message: ServerMessage) => void) {
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    // vrai tant que ce hook est monté ; repasse à false au démontage
+    let active = true;
     let socket: WebSocket;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
 
     const connect = () => {
       socket = new WebSocket(url);
@@ -15,13 +18,14 @@ export function useWs(url: string, dispatch: (message: ServerMessage) => void) {
       socket.onopen = () => setIsReady(true);
       socket.onclose = () => {
         setIsReady(false);
-        setTimeout(connect, 1000);
+        // on ne reconnecte QUE si la coupure est subie (serveur),
+        // pas si c'est nous qui fermons volontairement (démontage)
+        if (active) reconnectTimer = setTimeout(connect, 1000);
       };
       socket.onerror = console.error;
       socket.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data) as ServerMessage;
-          dispatch(message);
+          dispatch(JSON.parse(event.data) as ServerMessage);
         } catch (e) {
           console.error(e);
         }
@@ -29,7 +33,14 @@ export function useWs(url: string, dispatch: (message: ServerMessage) => void) {
     };
 
     connect();
-    return () => socket.close();
+
+    // fermeture volontaire : on coupe la reconnexion et on détache le onclose
+    return () => {
+      active = false;
+      clearTimeout(reconnectTimer);
+      socket.onclose = null;
+      socket.close();
+    };
   }, [url, dispatch]);
 
   const send = (data: string) => {

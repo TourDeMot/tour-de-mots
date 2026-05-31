@@ -1,84 +1,129 @@
-import type {
-  Game,
-  JoinGameMessage,
-  NewGameMessage,
-  ServerMessage,
-  SocketData,
-} from "@tour-de-mot/shared/types";
-import { ALREADY_IN_A_GAME, MISSING_GAME_ID } from "@tour-de-mot/shared/error";
-import type { ServerWebSocket } from "bun";
+import type { ClientPayload } from "@tour-de-mot/shared/types";
+import {
+  ALREADY_IN_A_GAME,
+  GAME_ALREADY_STARTED,
+  GAME_NOT_STARTED,
+  MISSING_GAME_ID,
+  NOT_ENOUGH_PLAYERS,
+  NOT_IN_GAME,
+  UNKNOWN_MODE,
+} from "@tour-de-mot/shared/error";
 import { createGame, joinGame, leaveGame } from "./games";
-import type { Payload } from "./messages";
+import { getMode } from "./modes";
+import type { Ctx } from "./context";
+import { broadcast, send, sendTo } from "./context";
+import type { GameState } from "./state";
 
-export const handleNewGame = (
-  ws: ServerWebSocket<SocketData>,
-  games: Map<string, Game>,
-  payload: Payload<"NEW_GAME">,
-) => {
-  if (ws.data.gameId) {
-    return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
-  }
+export const handleNewGame = (ctx: Ctx, payload: ClientPayload<"NEW_GAME">) => {
+  const { ws, games } = ctx;
+  if (ws.data.gameId) return send(ws, ALREADY_IN_A_GAME);
 
   const result = createGame(games, {
     uuid: ws.data.uuid,
     pseudo: payload.pseudo,
   });
+  if (!result.ok) return send(ws, result.error);
 
-  if (!result.ok) {
-    return ws.send(JSON.stringify(result.error));
-  }
-
-  const gameId = result.value.gameId;
-
+  const { gameId, players } = result.value;
   ws.data.gameId = gameId;
   ws.subscribe(gameId);
-  return ws.send(
-    JSON.stringify({
-      event: "NEW_GAME_OK",
-      payload: { gameId, players: result.value.players },
-    } as ServerMessage),
-  );
+  send(ws, { event: "NEW_GAME_OK", payload: { gameId, players } });
 };
 
 export const handleJoinGame = (
-  ws: ServerWebSocket<SocketData>,
-  games: Map<string, Game>,
-  payload: Payload<"JOIN_GAME">,
+  ctx: Ctx,
+  payload: ClientPayload<"JOIN_GAME">,
 ) => {
-  if (!payload.gameId) {
-    return ws.send(JSON.stringify(MISSING_GAME_ID));
-  }
-
-  if (ws.data.gameId) {
-    return ws.send(JSON.stringify(ALREADY_IN_A_GAME));
-  }
+  const { ws, games } = ctx;
+  if (!payload.gameId) return send(ws, MISSING_GAME_ID);
+  if (ws.data.gameId) return send(ws, ALREADY_IN_A_GAME);
 
   const result = joinGame(games, payload.gameId, {
     uuid: ws.data.uuid,
     pseudo: payload.pseudo,
   });
-  if (!result.ok) {
-    return ws.send(JSON.stringify(result.error));
-  }
+  if (!result.ok) return send(ws, result.error);
 
   ws.data.gameId = payload.gameId;
   ws.subscribe(payload.gameId);
 
-  const responsePayload = JSON.stringify({
+  // les autres joueurs (publish) + soi-même (publish n'inclut pas l'émetteur)
+  const message = {
     event: "JOIN_GAME_OK",
-    payload: { players: result.value },
-  } as ServerMessage);
-
-  ws.publish(payload.gameId, responsePayload);
-
-  // publish does not send to the current client so we need to send the message to it too
-  return ws.send(responsePayload);
+    payload: { gameId: payload.gameId, players: result.value },
+  } as const;
+  broadcast(ws, payload.gameId, message);
+  send(ws, message);
 };
 
-export const handleClose = (
-  ws: ServerWebSocket<SocketData>,
-  games: Map<string, Game>,
+export const handleStartGame = (
+  ctx: Ctx,
+  payload: ClientPayload<"START_GAME">,
 ) => {
+  const { ws, games } = ctx;
+  const gameId = ws.data.gameId;
+  if (!gameId) return send(ws, NOT_IN_GAME);
+
+  const game = games.get(gameId);
+  if (!game) return send(ws, NOT_IN_GAME);
+  if (game.phase !== "LOBBY") return send(ws, GAME_ALREADY_STARTED);
+
+  const mode = getMode(payload.mode);
+  if (!mode) return send(ws, UNKNOWN_MODE);
+  if (game.players.length < mode.minPlayers) {
+    return send(ws, NOT_ENOUGH_PLAYERS);
+  }
+
+  const modeState = mode.init(game.players);
+  const updated: GameState = {
+    ...game,
+    phase: "PLAYING",
+    mode: mode.id,
+    modeState,
+  };
+  games.set(gameId, updated);
+
+  // tout le monde apprend que la partie démarre
+  broadcast(ws, gameId, { event: "GAME_STARTED", payload: { mode: mode.id } });
+  send(ws, { event: "GAME_STARTED", payload: { mode: mode.id } });
+
+  // puis chaque joueur reçoit son premier prompt (personnalisé)
+  for (const out of mode.onStart(modeState)) sendTo(ctx, out.to, out.message);
+};
+
+export const handleSubmitSentence = (
+  ctx: Ctx,
+  payload: ClientPayload<"SUBMIT_SENTENCE">,
+) => {
+  const { ws, games } = ctx;
+  const gameId = ws.data.gameId;
+  if (!gameId) return send(ws, NOT_IN_GAME);
+
+  const game = games.get(gameId);
+  if (!game) return send(ws, NOT_IN_GAME);
+  if (game.phase !== "PLAYING" || !game.mode) return send(ws, GAME_NOT_STARTED);
+
+  const mode = getMode(game.mode);
+  if (!mode) return send(ws, UNKNOWN_MODE);
+
+  const player = game.players.find((p) => p.uuid === ws.data.uuid);
+  if (!player) return send(ws, NOT_IN_GAME);
+
+  const result = mode.submit(game.modeState, player, payload.text);
+  if (!result.ok) return send(ws, result.error);
+
+  const { state, outbound, finished } = result.value;
+  games.set(gameId, {
+    ...game,
+    modeState: state,
+    phase: finished ? "FINISHED" : "PLAYING",
+  });
+
+  for (const out of outbound) sendTo(ctx, out.to, out.message);
+};
+
+export const handleClose = (ctx: Ctx) => {
+  const { ws, games } = ctx;
   const { uuid, gameId } = ws.data;
   if (!gameId) return;
 
@@ -88,12 +133,9 @@ export const handleClose = (
   ws.unsubscribe(gameId);
 
   if (result.value.length !== 0) {
-    ws.publish(
-      gameId,
-      JSON.stringify({
-        event: "PLAYER_LEAVED",
-        payload: { players: result.value },
-      } as ServerMessage),
-    );
+    broadcast(ws, gameId, {
+      event: "PLAYER_LEAVED",
+      payload: { players: result.value },
+    });
   }
 };

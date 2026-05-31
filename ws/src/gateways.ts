@@ -1,22 +1,16 @@
 import { messageRouter } from "./routers";
-import type { Game, SocketData } from "@tour-de-mot/shared/types";
+import type { ClientMessage } from "@tour-de-mot/shared/types";
 import { MISSING_UUID, BAD_JSON } from "@tour-de-mot/shared/error";
-import type { ServerWebSocket } from "bun";
-import type { ClientMessage } from "./messages";
+import type { Ctx } from "./context";
+import { send } from "./context";
 
-export const messageGateway = (
-  ws: ServerWebSocket<SocketData>,
-  raw: string | Buffer,
-  games: Map<string, Game>,
-) => {
-  if (!ws.data.uuid) {
-    return ws.send(JSON.stringify(MISSING_UUID));
-  }
+export const messageGateway = (ctx: Ctx, raw: string | Buffer) => {
+  if (!ctx.ws.data.uuid) return send(ctx.ws, MISSING_UUID);
 
   try {
     const message = JSON.parse(raw.toString()) as ClientMessage;
-    messageRouter(ws, games, message);
+    messageRouter(ctx, message);
   } catch (_) {
-    ws.send(JSON.stringify(BAD_JSON));
+    send(ctx.ws, BAD_JSON);
   }
 };
